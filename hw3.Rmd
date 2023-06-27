@@ -1,0 +1,239 @@
+---
+title: "Homework 3"
+date: 'Due: Oct 5, 2:00pm'
+output:
+ pdf_document:
+    toc: yes
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Question 1 (24 regular pts)
+
+`Isomap` for handwritten digits in the training data.
+
+**(a) (6 pts)** load file `zip.RData` into R. Note: this file is what you saved in Hw2 Question 1 (b).
+
+**Answer:** 
+
+```{r, echo=TRUE}
+library(dplyr)
+load("~/Downloads/zip.RData")
+```
+
+
+**(b) (6 pts)** It can take a long time to run `Isomap` on these digits (well, not too long, just several minutes; but it is clear that `Isomap` does not scale well at sample size.). Subsample 500 digits from `dat$train` and save them into a R data frame named as `datamatrix` (`datamatrix` should have dimensions _500_ by _257_). The first column of `datamatrix` contains the digit labels. Save the first column (labels) into a R vector named as `y` and save the last 256 columns of `datamatrix` into a R matrix named as `x`. `Isomap` will be applied on `x` (digits) only.
+
+**Answer:** 
+
+```{r, echo=TRUE}
+ind <- sample(1:2302, 500, replace = FALSE)
+datamatrix <- dat$train[ind,]
+y <- datamatrix[,1]
+x <- datamatrix[,-1]
+```
+
+**(c) (6 pts)** Use Isomap (with parameter _k=5_) to find a two dimensional embedding to the handwritten digits in the training data, i.e., `x`. Plot the samples (digits) in the embedded two-dimensional space and color different digits in different colors. Are 1’s, 4’s, and 7’s well separated in this space? 
+
+**Answer:** 
+
+```{r, echo=TRUE}
+library(vegan)
+D <- dist(x, method = "euclidean")
+embedding <- isomap(D, ndim = 2, k = 5)
+plot(embedding$points, type = 'n', xlab = "dim1", ylab = "dim2")
+points(embedding$points[y == 1, 1], embedding$points[y == 1, 2], pch = '1', col = 'black')
+points(embedding$points[y == 4,1], embedding$points[y == 4, 2], pch = '4', col = 'red')
+points(embedding$points[y == 7,1], embedding$points[y == 7, 2], pch = '7', col = 'blue')
+```
+1s,4s, and 7s are pretty well separated in this space.
+
+
+**(d) (6 pts)** Try different parameter values (say _k= 5, 10, 25, 50_) for `Isomap`. Do Part 1 again. 
+
+**Answer:** 
+
+```{r, echo=TRUE}
+par(mar = c(0,0,0,0),mfrow = c(2,2))
+
+embedding <- isomap(D, ndim = 2, k = 5)
+plot(embedding$points, type = 'n', xlab = "dim1", ylab = "dim2")
+points(embedding$points[y == 1, 1], embedding$points[y == 1, 2], pch = '1', col = 'black')
+points(embedding$points[y == 4,1], embedding$points[y == 4, 2], pch = '4', col = 'red')
+points(embedding$points[y == 7,1], embedding$points[y == 7, 2], pch = '7', col = 'blue')
+
+embedding_10 <- isomap(D, ndim = 2, k = 10)
+plot(embedding_10$points, type = 'n', xlab = "dim1", ylab = "dim2")
+points(embedding_10$points[y == 1, 1], embedding_10$points[y == 1, 2], pch = '1', col = 'black')
+points(embedding_10$points[y == 4,1], embedding_10$points[y == 4, 2], pch = '4', col = 'red')
+points(embedding_10$points[y == 7,1], embedding_10$points[y == 7, 2], pch = '7', col = 'blue')
+
+embedding_25 <- isomap(D, ndim = 2, k = 25)
+plot(embedding_25$points, type = 'n', xlab = "dim1", ylab = "dim2")
+points(embedding_25$points[y == 1, 1], embedding_25$points[y == 1, 2], pch = '1', col = 'black')
+points(embedding_25$points[y == 4,1], embedding_25$points[y == 4, 2], pch = '4', col = 'red')
+points(embedding_25$points[y == 7,1], embedding_25$points[y == 7, 2], pch = '7', col = 'blue')
+
+embedding_50 <- isomap(D, ndim = 2, k = 50)
+plot(embedding_50$points, type = 'n', xlab = "dim1", ylab = "dim2")
+points(embedding_50$points[y == 1, 1], embedding_50$points[y == 1, 2], pch = '1', col = 'black')
+points(embedding_50$points[y == 4,1], embedding_50$points[y == 4, 2], pch = '4', col = 'red')
+points(embedding_50$points[y == 7,1], embedding_50$points[y == 7, 2], pch = '7', col = 'blue')
+```
+For each parameter value, the 1s, 4s, and 7s are well separated. 
+
+
+## Question 2 (24 regular pts)
+
+_kNN_ on handwritten digits data.
+
+**(a) (6 pts)** Report the training confusion matrix and the training error (misclassification rate on training set) of the 1-nearest neighbor classifier. Note: you should use `dat$train` as the training data, and use `dat$test` as the test data. 
+
+**Answer:** 
+
+```{r, echo=TRUE}
+library(class)
+train_x <- dat$train[,-1]
+train_y <- dat$train[,1]
+test_x <- dat$test[,-1]
+test_y <- dat$test[,1]
+
+train_y_hat<- knn(train_x,train_x, train_y, k = 1)
+confmat_train <- table(train_y_hat,train_y)
+confmat_train
+misrate_train <- sum(train_y_hat != train_y)/length(train_y)
+misrate_train
+```
+
+
+**(b) (6pts)** (6 pts) Report the test confusion matrix and the test error (misclassification rate on testing set) of the 1-nearest neighbor classifier. Note: you should use `dat$train` as the training data, and use `dat$test` as the test data.
+
+**Answer:**
+
+```{r, echo=TRUE}
+test_y_hat<- knn(train_x,test_x, train_y, k = 1)
+confmat_test <- table(test_y_hat,test_y)
+confmat_test
+misrate_test <- sum(test_y_hat != test_y)/length(test_y)
+misrate_test
+```
+
+
+**(c) (6 pts)** (6 pts) Apply _kNN_ with different values of _k_, say _k=1,2,..., 20_. Which value of _k_ have the smallest error? Note: this optimum _k_ value depends on the random seed you chose.
+
+**Answer:**
+
+```{r, echo=TRUE}
+error <- rep(0,length(20))
+for (i in 1:20){
+  test_knn <- knn(train_x, test_x, train_y, k = i)
+  misrate <- sum(test_knn != test_y)/length(test_y)
+  error[i] = misrate
+}
+order(error, decreasing = FALSE)
+```
+k = 5 has the smallest error
+
+**(d) (6 pts)** (6 pts) Plot all digits in the test data that are misclassified (with the best _k_ value you found in Part 3). Will you classify them into the right classes by your bare eyes?
+
+**Answer:** 
+
+```{r, echo=TRUE}
+k5_test_yhat <- knn(train_x,test_x,train_y, k = 5)
+
+misclassified <- dat$test[k5_test_yhat != test_y, -1]
+
+conv.image <- function(vec)
+{
+  mat <- matrix(as.numeric(vec), nrow = 16, ncol = 16)
+  mat <- -mat[, 16:1]
+  image(mat,col= gray(seq(0,1,0.01)),xaxt = 'n', yaxt = 'n')
+}
+par(mar=c(0,0,0,0), mfrow = c(4,4))
+for (i in 1:16){
+  conv.image(misclassified[i,])
+}
+```
+Some you can classify with your eyes, although some you would not be able to, as they look like a blend between two numbers. 
+
+
+## Question 3 (6 regular pts, 4 bonus pts)
+MDS on flights data. _flights.txt_ stores a 6 by 6 matrix.
+The six rows correpond to six cities in US, and the six columns correspond
+to the same six cities. The number in the $i$'th row and $j$'th
+column is the minimum flight time in minutes (including the stopover
+time if there is no direct flight connecting the two cities) between
+city $i$ and city $j$. The six cities are (in no particular order):
+Madison (in Wisconsin), New York, Las Vegas, Minneapolis, Orlando,
+and South Bend, but we do not know which row/column corresponds to
+which city.
+
+**(a) (6 pts)** Treat the 6 by 6 matrix in _flights.txt_ as a distance matrix. Use Multidimensional Scaling to find a two-dimensional embedding of the six cities. Make a plot for the embedded data. Use 1 to 6 to denote the six cities on the plot.
+
+**Answer:**
+	
+```{r, echo=TRUE}
+library(readr)
+flights <- read_table("flights.txt", col_names = FALSE)
+View(flights)
+
+model.mds <- cmdscale(flights, k = 2)
+
+plot(model.mds, type = 'n', xlab = "dim1", ylab = "dim2")
+points(model.mds[1,1], model.mds[1,2], pch = '1')
+points(model.mds[2,1], model.mds[2,2], pch = '2')
+points(model.mds[3,1], model.mds[3,2], pch = '3')
+points(model.mds[4,1], model.mds[4,2], pch = '4')
+points(model.mds[5,1], model.mds[5,2], pch = '5')
+points(model.mds[6,1], model.mds[6,2], pch = '6')
+
+```	
+	
+**(b) (bonus 4 pts)** Now I tell you that the first city is South Bend, the second city is New York, and the third city is Orlando. Can you guess: which city is Madison, which city is Minneapolis, and which city is Las Vegas? Please discuss in detail how you make the guess.
+
+**Answer:**
+City 1: South Bend
+City 2: New York
+City 3: Orlando
+City 4: Minneapolis
+City 5: Madison
+City 6: Las Vegas
+
+The answers above would be my guesses for the cities. Based on examining the actual locations of the cities on a map, and given that we know City 2 and City 3, it seems like the plot shows the x distance as dim1 and y distance as dim2 except it is flipped relative to a normal map. Knowing this, you can then match each point with a city based on relative location. 
+## Question 4 (12 regular pts)
+
+LDA and QDA for handwritten digits data.
+
+**(a) (6 pts)**  Train a QDA classifier on the training data. Did your code
+	go through or did you get any error message? (You do not need to continue
+	doing it if you get an error message.)
+	
+**Answer:**
+	
+```{r, echo=TRUE, error=TRUE}
+library(MASS)
+train.qda <- qda(dat$train$V1 ~ ., data=dat$train)
+```
+Got an error message
+	
+**(b) (6 pts)** Train an LDA classifier on the training data, and test it on the test data. Report the confusion matrix and misclassification rate on the test data. Note: (1) You may again get an error message in the training. Based on this error message, you should be able to figure out what the problem is and solve it. (2) You may also get a warning message. Let's just ignore this warning message (We are brave enough!).
+
+**Answer:**
+
+```{r, echo=TRUE}
+train.lda <- lda(dat$train$V1 ~ ., data=dat$train)
+y_hat <- predict(train.lda, dat$train)$class
+confmat <- table(y_hat, dat$train$V1)
+confmat
+misrate <- sum(y_hat!=dat$train$V1)/length(y_hat)
+misrate
+```
+	
+
+
+
+
